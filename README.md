@@ -2,6 +2,12 @@
 
 An event driven ddp client
 
+**Installation**
+
+```bash
+$ pip install python-ddp
+```
+
 **Table of Contents**
 
 - [History](#history)
