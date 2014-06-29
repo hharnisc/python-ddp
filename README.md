@@ -61,99 +61,6 @@ sub_id = client.subscribe('posts', subscription_callback)
 client.unsubscribe(sub_id)
 ```
 
-### Connection State Events
-
-**Connected**
-
-```python
-from DDPClient import DDPClient
-
-def connected(self):
-    print '* CONNECTED'
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.on('connected', connected)
-client.connect()
-```
-
-**Socket Closed**
-
-```python
-from DDPClient import DDPClient
-
-def closed(self, code, reason):
-    print '* CONNECTION CLOSED {} {}'.format(code, reason)
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.on('socket_closed', closed)
-client.connect()
-```
-
-### Subscription Events
-
-**Added To Collection**
-
-```python
-from DDPClient import DDPClient
-
-def added(collection, id, fields):
-    print '* ADDED {} {}'.format(collection, id)
-    for key, value in fields.items():
-        print '  - FIELD {} {}'.format(key, value)
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.on('added', added)
-client.connect()
-sub_id = client.subscribe('posts')
-```
-
-**Collection Changed**
-
-```python
-from DDPClient import DDPClient
-
-def changed(self, collection, id, fields, cleared):
-    print '* CHANGED {} {}'.format(collection, id)
-    for key, value in fields.items():
-        print '  - FIELD {} {}'.format(key, value)
-    for key, value in cleared.items():
-        print '  - CLEARED {} {}'.format(key, value)
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.on('changed', changed)
-client.connect()
-sub_id = client.subscribe('posts')
-```
-
-**Removed From Collection**
-
-```python
-from DDPClient import DDPClient
-
-def removed(collection, id):
-    print '* REMOVED {} {}'.format(collection, id)
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.on('removed', removed)
-client.connect()
-sub_id = client.subscribe('posts')
-```
-
-### Other Events
-
-**Failed**
-
-```python
-from DDPClient import DDPClient
-
-def failed(collection, code, reason):
-    print '* FAILED - data: {}'.format(str(data))
-
-client = DDPClient('ws://127.0.0.1:3000/websocket')
-client.connect()
-client.on('failed', failed)
-```
-
 ## Usage
      
 ### Functions
@@ -236,7 +143,7 @@ _reason_ - the error message
 Register the event to a callback function
 
 ```python
-def failed(collection, code, reason):
+def failed(collection, data):
     print '* FAILED - data: {}'.format(str(data))
 
 client.on('failed', failed)
@@ -244,8 +151,7 @@ client.on('failed', failed)
 
 `failed` callback takes the following arguments
 
-_code_ - the error code  
-_reason_ - the error message  
+_data_ - the error data  
 
 #### added
 
