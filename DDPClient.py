@@ -1,53 +1,135 @@
 import sys
 import json
-import thread
-import traceback
+import time
+import socket
 
 from ws4py.client.threadedclient import WebSocketClient
 from pyee import EventEmitter
 
 DDP_VERSIONS = ["pre1"]
 
-class DDPClient(WebSocketClient, EventEmitter):
-    """An event driven ddp client"""
+class DDPSocket(WebSocketClient, EventEmitter):
+    """DDPSocket"""
     def __init__(self, url, debug=False):
+        self.debug = debug
         WebSocketClient.__init__(self, url)
         EventEmitter.__init__(self)
+
+    def opened(self):
+        """Set the connect flag to true and send the connect message to
+        the server."""
+        self.emit('opened')
+
+    def closed(self, code, reason=None):
+        """Called when the connection is closed"""
+        self.emit('closed', code, reason)
+
+    def send(self, msg_dict):
+        """Send a message through the websocket client and wait for the
+        answer if the message being sent contains an id attribute."""
+        message = json.dumps(msg_dict)
+        super(DDPSocket, self).send(message)
+        self._debug_log('<<<{}'.format(message))
+
+    def received_message(self, data):
+        self._debug_log('>>>{}'.format(data))
+        self.emit('received_message', data)
+
+    def _debug_log(self, msg):
+        """Debug log messages if debug=True"""
+        if not self.debug:
+            return
+        sys.stderr.write('{}\n'.format(msg))
+
+
+class DDPClient(EventEmitter):
+    """An event driven ddp client"""
+    def __init__(self, url, auto_reconnect=True, auto_reconnect_timeout=0.5, debug=False):
+        EventEmitter.__init__(self)
+        self.ddpsocket = None
+        self._is_closing = False
+        self.url = url
+        self.auto_reconnect = auto_reconnect
+        self.auto_reconnect_timeout = auto_reconnect_timeout
         self.debug = debug
         self._session = None
         self._uniq_id = 0
         self._callbacks = {}
+        self._init_socket()
+
+    def _init_socket(self):
+        """Initialize the ddp socket"""
+        # destroy the connection if it already exists
+        if self.ddpsocket:
+            self.ddpsocket.remove_all_listeners('received_message')
+            self.ddpsocket.remove_all_listeners('closed')
+            self.ddpsocket.remove_all_listeners('opened')
+            self.ddpsocket.close_connection()
+            self.ddpsocket = None
+
+        # create a ddp socket and subscribe to events
+        self.ddpsocket = DDPSocket(self.url, self.debug)
+        self.ddpsocket.on('received_message', self.received_message)
+        self.ddpsocket.on('closed', self.closed)
+        self.ddpsocket.on('opened', self.opened)
+
+    def _recover_network_failure(self):
+        """Recover from a network failure"""
+        if self.auto_reconnect and not self._is_closing:
+            connected = False
+            while not connected:
+                self.ddpsocket._debug_log("* ATTEMPTING RECONNECT")
+                time.sleep(self.auto_reconnect_timeout)
+                self._init_socket()
+                try:
+                    self.connect()
+                    connected = True
+                    self.ddpsocket._debug_log("* RECONNECTED")
+                    self.emit('reconnect')
+                except socket.error:
+                    pass
 
     def _next_id(self):
         """Get the next id that will be sent to the server"""
         self._uniq_id += 1
         return str(self._uniq_id)
 
+    def connect(self):
+        if self.ddpsocket:
+            self.ddpsocket.connect()
+
+    def close(self):
+        self._is_closing = True
+        self.ddpsocket.close()
+
     def opened(self):
         """Set the connect flag to true and send the connect message to
         the server."""
-        self.send({
+        connect_msg = {
             "msg": "connect",
             "version": DDP_VERSIONS[0],
             "support": DDP_VERSIONS
-        })
+        }
+
+        # if we've already got a session token then reconnect
+        if self._session:
+            connect_msg["session"] = self._session
+
+        self.send(connect_msg)
 
     def closed(self, code, reason=None):
         """Called when the connection is closed"""
         self.emit('socket_closed', code, reason)
-        # TODO: retry here if not intended to close
+        self._recover_network_failure()
 
     def send(self, msg_dict):
         """Send a message through the websocket client and wait for the
         answer if the message being sent contains an id attribute."""
-        message = json.dumps(msg_dict)
-        super(DDPClient, self).send(message)
-        self._debug_log('<<<{}'.format(message))
+        self.ddpsocket.send(msg_dict)
 
     def received_message(self, data):
         """Incomming messages"""
         data = json.loads(str(data))
-        self._debug_log('>>>{}'.format(data))
         if not data.get('msg'):
             return
 
@@ -132,17 +214,3 @@ class DDPClient(WebSocketClient, EventEmitter):
         Arguments:
         sub_id - the id of the subsciption (returned by subcribe)"""
         self.send({'msg': 'unsub', 'id': sub_id})
-
-    def _debug_log(self, msg):
-        """Debug log messages if debug=True"""
-        if not self.debug:
-            return
-        sys.stderr.write('{}\n'.format(msg))
-
-    def run(self):
-        try:
-            super(DDPClient, self).run()
-        except:
-            traceback.print_exc()
-        finally:
-            thread.interrupt_main()
