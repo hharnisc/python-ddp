@@ -85,7 +85,7 @@ class DDPClient(EventEmitter):
                     self.connect()
                     connected = True
                     self.ddpsocket._debug_log("* RECONNECTED")
-                    self.emit('reconnect')
+                    self.emit('reconnected')
                 except socket.error:
                     pass
 
@@ -100,7 +100,7 @@ class DDPClient(EventEmitter):
 
     def close(self):
         self._is_closing = True
-        self.ddpsocket.close()
+        self.ddpsocket.close_connection()
 
     def opened(self):
         """Set the connect flag to true and send the connect message to

@@ -18,7 +18,7 @@ $ pip install python-ddp
 
 **Latest Version** 0.1.1
 
-- Implemented auto reconnect (auto reconnect on by default) and reconnect event emitter
+- Implemented auto reconnect (auto reconnect on by default) and reconnected event emitter
 
 **Version** 0.1.0
 
@@ -94,9 +94,9 @@ _url_ - to connect to ddp server
 
 **Keyword Arguments**
 
-_auto_reconnect_ - automatic reconnect (default: True)
-_auto_reconnect_timeout_ - reconnect every X seconds (default: 0.5)
-_debug_ - print out lots of debug info (default: False)
+_auto_reconnect_ - automatic reconnect (default: True)  
+_auto_reconnect_timeout_ - reconnect every X seconds (default: 0.5)  
+_debug_ - print out lots of debug info (default: False)  
      
 ### Functions
 
@@ -173,16 +173,16 @@ client.on('socket_closed', closed)
 _code_ - the error code  
 _reason_ - the error message  
 
-### reconnect
+### reconnected
 
 ```python
 def reconnected(self):
     print '* RECONNECTED'
 
-client.on('reconnect', reconnected)
+client.on('reconnected', reconnected)
 ```
 
-`reconnect` call back takes no arguments
+`reconnected` call back takes no arguments
 
 #### failed
 
@@ -263,7 +263,7 @@ For reference
 ```python
 client.on('connected', connected)
 client.on('socket_closed', closed)
-client.on('reconnect', reconnected)
+client.on('reconnected', reconnected)
 client.on('failed', failed)
 client.on('added', added)
 client.on('changed', changed)
