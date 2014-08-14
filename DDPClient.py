@@ -3,6 +3,7 @@ import json
 import time
 import socket
 
+from ws4py.exc import WebSocketException
 from ws4py.client.threadedclient import WebSocketClient
 from pyee import EventEmitter
 
@@ -86,7 +87,7 @@ class DDPClient(EventEmitter):
                     connected = True
                     self.ddpsocket._debug_log("* RECONNECTED")
                     self.emit('reconnected')
-                except socket.error:
+                except (socket.error, WebSocketException):
                     pass
 
     def _next_id(self):
