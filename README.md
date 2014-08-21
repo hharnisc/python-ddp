@@ -13,10 +13,15 @@ $ pip install python-ddp
 - [History](#history)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
+- [Collaborators](#collaborators)
 
 ## History
 
-**Latest Version** 0.1.1
+**Latest Version** 0.1.2
+
+- BUGFIX - auto reconnect can now handle WebSocketExceptions (thanks [@ppettit](https://github.com/ppettit))
+
+**Version** 0.1.1
 
 - Implemented auto reconnect (auto reconnect on by default) and reconnected event emitter
 
@@ -269,3 +274,7 @@ client.on('added', added)
 client.on('changed', changed)
 client.on('removed', removed)
 ```
+
+##Collaborators
+
+- [@ppettit](https://github.com/ppettit)
