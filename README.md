@@ -16,7 +16,11 @@ $ pip install python-ddp
 
 ## History
 
-**Latest Version** 0.1.0
+**Latest Version** 0.1.1
+
+- Implemented auto reconnect (auto reconnect on by default) and reconnected event emitter
+
+**Version** 0.1.0
 
 - Initial implementation, add ability to call, subscribe and unsubscribe
 
@@ -24,7 +28,7 @@ $ pip install python-ddp
 
 ### General Commands
 
-**Establish a connection and Close It**
+**Establish A Connection And Close It**
 
 ```python
 from DDPClient import DDPClient
@@ -32,6 +36,23 @@ from DDPClient import DDPClient
 client = DDPClient('ws://127.0.0.1:3000/websocket')
 client.connect()
 client.close()
+```
+
+**Establish A Connection Without Auto Reconnect**
+
+```python
+from DDPClient import DDPClient
+client = DDPClient('ws://127.0.0.1:3000/websocket', auto_reconnect=False)
+client.connect()
+```
+
+**Establish A Connection And With Reconnect Different Frequency**
+
+```python
+from DDPClient import DDPClient
+# try to reconnect every second
+client = DDPClient('ws://127.0.0.1:3000/websocket', auto_reconnect=True, auto_reconnect_timeout=1)
+client.connect()
 ```
 
 **Call A Remote Function**
@@ -62,6 +83,20 @@ client.unsubscribe(sub_id)
 ```
 
 ## Usage
+
+### Class Init
+
+####DDPClient(url, auto_reconnect=True, auto_reconnect_timeout=0.5, debug=False)
+
+**Arguments**
+
+_url_ - to connect to ddp server
+
+**Keyword Arguments**
+
+_auto_reconnect_ - automatic reconnect (default: True)  
+_auto_reconnect_timeout_ - reconnect every X seconds (default: 0.5)  
+_debug_ - print out lots of debug info (default: False)  
      
 ### Functions
 
@@ -133,10 +168,21 @@ def closed(self, code, reason):
 client.on('socket_closed', closed)
 ```
 
-`closed` callback takes the following arguments
+`socket_closed` callback takes the following arguments
 
 _code_ - the error code  
 _reason_ - the error message  
+
+### reconnected
+
+```python
+def reconnected(self):
+    print '* RECONNECTED'
+
+client.on('reconnected', reconnected)
+```
+
+`reconnected` call back takes no arguments
 
 #### failed
 
@@ -217,6 +263,7 @@ For reference
 ```python
 client.on('connected', connected)
 client.on('socket_closed', closed)
+client.on('reconnected', reconnected)
 client.on('failed', failed)
 client.on('added', added)
 client.on('changed', changed)
