@@ -42,6 +42,32 @@ class DDPSocket(WebSocketClient, EventEmitter):
             return
         sys.stderr.write('{}\n'.format(msg))
 
+    def once(self):
+        """ OVERRIDE FROM WebSocket
+        Performs the operation of reading from the underlying
+        connection in order to feed the stream of bytes.
+        We start with a small size of two bytes to be read
+        from the connection so that we can quickly parse an
+        incoming frame header. Then the stream indicates
+        whatever size must be read from the connection since
+        it knows the frame payload length.
+        It returns `False` if an error occurred at the
+        socket level or during the bytes processing. Otherwise,
+        it returns `True`."""
+        # check for self.sock existence
+        # https://github.com/hharnisc/python-meteor/issues/5
+        if self.terminated or not self.sock:
+            return False
+
+        try:
+            b = self.sock.recv(self.reading_buffer_size)
+        except socket.error:
+            return False
+        else:
+            if not self.process(b):
+                return False
+
+
 
 class DDPClient(EventEmitter):
     """An event driven ddp client"""
