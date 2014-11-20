@@ -6,7 +6,7 @@ with open('README.md') as f:
     readme = f.read()
 
 setup(name='python-ddp',
-    version='0.1.2',
+    version='0.1.3',
     description='An event driven ddp client',
     long_description=readme,
     license='MIT',
