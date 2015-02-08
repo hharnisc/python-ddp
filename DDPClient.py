@@ -75,6 +75,7 @@ class DDPClient(EventEmitter):
         EventEmitter.__init__(self)
         self.ddpsocket = None
         self._is_closing = False
+        self._is_reconnecting = False
         self.url = url
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_timeout = auto_reconnect_timeout
@@ -111,8 +112,7 @@ class DDPClient(EventEmitter):
                 try:
                     self.connect()
                     connected = True
-                    self.ddpsocket._debug_log("* RECONNECTED")
-                    self.emit('reconnected')
+                    self._is_reconnecting = True
                 except (socket.error, WebSocketException):
                     pass
 
@@ -165,7 +165,13 @@ class DDPClient(EventEmitter):
 
         elif data['msg'] == 'connected':
             self._session = data.get('session')
-            self.emit('connected')
+            if self._is_reconnecting:
+                self.ddpsocket._debug_log("* RECONNECTED")
+                self.emit('reconnected')
+                self._is_reconnecting = False
+            else:
+                self.ddpsocket._debug_log("* CONNECTED")
+                self.emit('connected')
 
         # method result
         elif data['msg'] == 'result':
