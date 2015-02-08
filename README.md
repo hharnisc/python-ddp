@@ -17,7 +17,16 @@ $ pip install python-ddp
 
 ## History
 
-**Latest Version** 0.1.2
+**Latest Version** 0.1.4
+
+- BUGFIX - fix reconnect order (thanks [@ppettit](https://github.com/ppettit))
+- BUGFIX - fix breaking change <https://github.com/hharnisc/python-ddp/commit/5998839866fccfee8a456cb5cb2559a320f2203d> (thanks [@ppettit](https://github.com/ppettit))
+
+**Version** 0.1.3
+
+- BUGFIX - closed python meteor [issue #5](https://github.com/hharnisc/python-meteor/issues/5)
+
+**Version** 0.1.2
 
 - BUGFIX - auto reconnect can now handle WebSocketExceptions (thanks [@ppettit](https://github.com/ppettit))
 
