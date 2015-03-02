@@ -3,3 +3,5 @@ dist
 DDPCommandLineTool.py
 python_ddp.egg-info
 *~
+*.pyc
+build
