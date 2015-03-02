@@ -7,7 +7,7 @@ from ws4py.exc import WebSocketException
 from ws4py.client.threadedclient import WebSocketClient
 from pyee import EventEmitter
 
-DDP_VERSIONS = ["pre1"]
+DDP_VERSIONS = ["1"]
 
 class DDPSocket(WebSocketClient, EventEmitter):
     """DDPSocket"""
@@ -190,6 +190,14 @@ class DDPClient(EventEmitter):
                 if callback:
                     callback(data.get('error'), sub_id)
                     self._callbacks.pop(sub_id)
+
+        elif data['msg'] == 'ping':
+            msg = {'msg': 'pong'}
+            id = data.get('id')
+            if id is not None:
+                msg['id'] = id
+            self.ddpsocket.send(msg)
+
         else:
             pass
 
