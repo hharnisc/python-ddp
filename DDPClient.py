@@ -7,12 +7,16 @@ from ws4py.exc import WebSocketException
 from ws4py.client.threadedclient import WebSocketClient
 from pyee import EventEmitter
 
-DDP_VERSIONS = ["1"]
+DDP_VERSIONS = ["1", "pre2", "pre1"]
 
 class DDPSocket(WebSocketClient, EventEmitter):
     """DDPSocket"""
     def __init__(self, url, debug=False):
         self.debug = debug
+        # by default socket connections don't timeout. this causes issues
+        # where reconnects can get stuck
+        # TODO: make this configurable?
+        socket.setdefaulttimeout(10)
         WebSocketClient.__init__(self, url)
         EventEmitter.__init__(self)
 
@@ -55,6 +59,8 @@ class DDPClient(EventEmitter):
     def __init__(self, url, auto_reconnect=True, auto_reconnect_timeout=0.5, debug=False):
         EventEmitter.__init__(self)
         self.ddpsocket = None
+        self._ddp_version_index = 0
+        self._retry_new_version = False
         self._is_closing = False
         self._is_reconnecting = False
         self.url = url
@@ -87,13 +93,19 @@ class DDPClient(EventEmitter):
         if self.auto_reconnect and not self._is_closing:
             connected = False
             while not connected:
-                self.ddpsocket._debug_log("* ATTEMPTING RECONNECT")
+                log_msg = "* ATTEMPTING RECONNECT"
+                if self._retry_new_version:
+                    log_msg = "* RETRYING DIFFERENT DDP VERSION"
+                self.ddpsocket._debug_log(log_msg)
                 time.sleep(self.auto_reconnect_timeout)
                 self._init_socket()
                 try:
                     self.connect()
                     connected = True
-                    self._is_reconnecting = True
+                    if self._retry_new_version:
+                        self._retry_new_version = False
+                    else:
+                        self._is_reconnecting = True
                 except (socket.error, WebSocketException):
                     pass
 
@@ -111,11 +123,21 @@ class DDPClient(EventEmitter):
         self.ddpsocket.close_connection()
 
     def opened(self):
-        """Set the connect flag to true and send the connect message to
-        the server."""
+        """Send the connect message to the server."""
+        # give up if there are no more ddp versions to try
+        if self._ddp_version_index == len(DDP_VERSIONS):
+            self.ddpsocket._debug_log('* DDP VERSION MISMATCH')
+            self.emit('version_mismatch', DDP_VERSIONS)
+            return
+
+        # use server recommended version if we support it
+        if self._retry_new_version in DDP_VERSIONS:
+            self._ddp_version_index = [i for i, x in enumerate(DDP_VERSIONS)
+                                       if x == self._retry_new_version][0]
+
         connect_msg = {
             "msg": "connect",
-            "version": DDP_VERSIONS[0],
+            "version": DDP_VERSIONS[self._ddp_version_index],
             "support": DDP_VERSIONS
         }
 
@@ -142,6 +164,8 @@ class DDPClient(EventEmitter):
             return
 
         elif data['msg'] == 'failed':
+            self._ddp_version_index += 1
+            self._retry_new_version = data.get('version', True)
             self.emit('failed', data)
 
         elif data['msg'] == 'connected':
@@ -153,6 +177,7 @@ class DDPClient(EventEmitter):
             else:
                 self.ddpsocket._debug_log("* CONNECTED")
                 self.emit('connected')
+                self._retry_new_version = False
 
         # method result
         elif data['msg'] == 'result':
