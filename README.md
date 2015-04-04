@@ -17,7 +17,11 @@ $ pip install python-ddp
 
 ## History
 
-**Latest Version** 0.1.4
+**Latest Version** 0.1.5
+- Handle DDP versions _1_, _pre2_ and _pre1_ (thanks [@ppettit](https://github.com/ppettit))
+- Added [EJSON](http://docs.meteor.com/#/full/ejson) support (thanks [@tdamsma](https://github.com/tdamsma))
+
+**Version** 0.1.4
 
 - BUGFIX - fix reconnect order (thanks [@ppettit](https://github.com/ppettit))
 - BUGFIX - fix breaking change <https://github.com/hharnisc/python-ddp/commit/5998839866fccfee8a456cb5cb2559a320f2203d> (thanks [@ppettit](https://github.com/ppettit))
@@ -305,3 +309,4 @@ client.on('removed', removed)
 ##Collaborators
 
 - [@ppettit](https://github.com/ppettit)
+- [@tdamsma](https://github.com/tdamsma)
