@@ -1,5 +1,5 @@
 import sys
-import json
+import ejson
 import time
 import socket
 
@@ -32,7 +32,7 @@ class DDPSocket(WebSocketClient, EventEmitter):
     def send(self, msg_dict):
         """Send a message through the websocket client and wait for the
         answer if the message being sent contains an id attribute."""
-        message = json.dumps(msg_dict)
+        message = ejson.dumps(msg_dict)
         super(DDPSocket, self).send(message)
         self._debug_log('<<<{}'.format(message))
 
@@ -159,7 +159,7 @@ class DDPClient(EventEmitter):
 
     def received_message(self, data):
         """Incomming messages"""
-        data = json.loads(str(data))
+        data = ejson.loads(str(data))
         if not data.get('msg'):
             return
 
@@ -245,7 +245,7 @@ class DDPClient(EventEmitter):
 
         Arguments:
         name - the name of the publication to subscribe
-        params - params to subscribe (parsed as json)
+        params - params to subscribe (parsed as ejson)
 
         Keyword Arguments:
         callback - a callback function that gets executed when the subscription has completed"""

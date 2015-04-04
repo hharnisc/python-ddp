@@ -26,6 +26,7 @@ setup(name='python-ddp',
     py_modules=['DDPClient'],
     install_requires=[
         'pyee',
-        'ws4py'
+        'ws4py',
+        'meteor-ejson'
     ],
 )
