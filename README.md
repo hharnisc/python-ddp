@@ -213,6 +213,23 @@ client.on('failed', failed)
 
 _data_ - the error data  
 
+#### version_mismatch
+
+Register the event to a callback function
+
+This event is fired if the server and client can not agree on a DDP version to use and is a fatal error
+
+```python
+def version_mismatch(versions):
+    print '* VERSION MISMATCH - versions: {}'.format(str(versions))
+
+client.on('version_mismatch', version_mismatch)
+```
+
+`version_mismatch` callback takes the following arguments
+
+_versions_ - the DDP versions attempted
+
 #### added
 
 Register the event to a callback function
@@ -279,6 +296,7 @@ client.on('connected', connected)
 client.on('socket_closed', closed)
 client.on('reconnected', reconnected)
 client.on('failed', failed)
+client.on('version_mismatch', version_mismatch)
 client.on('added', added)
 client.on('changed', changed)
 client.on('removed', removed)
